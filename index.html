@@ -1,0 +1,159 @@
+<canvas id=a>
+    <script>
+     
+
+        /* voxel factory & iterator */
+        function v(worldSize, voxelSize, camera) {
+            this.screenPivot = 0
+            this.vs = new Uint8ClampedArray(worldSize)
+        }
+        
+    </script>
+        <script>
+
+            
+            
+colors = {
+    back : "#010001",
+    clearLight : "#32e46b",
+    darkLight : "#1d5f65",
+    trajectory : "#3c495e" ,
+    grid : "#47596d"
+}      
+        //x y r    
+balls = [
+    100,300,100,
+    700,200,110
+]            
+var screenWidth = window.innerWidth
+var screenHeight = window.innerHeight
+a.style.background = colors.back
+            
+            
+a.width = screenWidth
+a.height = screenHeight
+            s=a.getContext`2d`;
+screen=0
+            c = 1000
+            
+w = new v(1000,10,0,0)
+px = balls[0]
+py = balls[1] + balls[2] + 50
+
+            
+t = 0
+sp = 0.026  
+
+g = true
+        
+            mode = 'menu'
+currentPlanet = 0            
+//p = 0
+            function p(x,y,r){
+                s.beginPath();
+                s.arc(x,y,r+40,0,2*Math.PI);
+                s.strokeStyle = colors.trajectory
+                s.stroke();
+                for(var i = -50; i < 50; i ++) {
+                    for(var j = -50; j < 50; j++) {
+                        if(Math.hypot(i*10,j*10) < r) {
+                            s.fillStyle = `hsl(${(x+y+((i+j*3)%20)%250)},${77+(i+j)%30}%,55%)`
+                            s.fillRect(i*10 + x,j*10 + y,10,10)
+                        }
+                    }
+                }
+            }
+            
+function l() { 
+    t += sp
+    s.fillStyle="#fff"
+    switch(mode) {
+        case 'menu':
+            s.fillText('Start a game', screenWidth/2, screenHeight/2)
+            return
+        case 'pause':
+            s.fillText('pause', screenWidth/2, screenHeight/2)
+            return
+        case 'edit':    
+        case 'game_over':
+            s.fillText('Game over', screenWidth/2, screenHeight/2)
+            return
+    }
+    if(c<=0) {
+        mode = 'game_over'
+    }
+    // grid
+    a.width+=0
+    for(var i=0; i < screenWidth/30; i ++) {
+        s.fillStyle = `hsl(0,0%,${(i)%101}%)`
+        for(var j = 0; j < screenHeight / 20; j ++) { s.fillRect(screenWidth/30 * i,screenHeight/20*j, 2,2) }
+    } 
+    
+    // world
+    for(var i = 0; i<balls.length/3;i++) {
+        p(balls[3*i],balls[3*i+1],balls[3*i+2])
+    }
+    //player
+    if(g) {
+        px = (40+balls[3*currentPlanet+2]) * Math.cos(t) + balls[3*currentPlanet] 
+        py = (40+balls[3*currentPlanet+2]) * Math.sin(t) + balls[3*currentPlanet+1]
+    } else {
+        vector = Math.hypot(px-balls[currentPlanet],py-balls[currentPlanet+1])
+        console.log(vector)
+        px+= (px - balls[currentPlanet]) / vector
+        py+= (py - balls[currentPlanet+1]) / vector
+        
+        for(var i = 0; i < balls.length/3; i ++) {
+            if(Math.hypot(px-balls[3*i],py-balls[3*i+1])<balls[3*i+2] + 40) {
+                g = true
+                currentPlanet = i
+                break
+            }
+            
+        }
+    }
+    s.fillStyle = "#991145"
+    s.fillRect(px,py, 10,10)
+    
+    // UI
+    s.beginPath()
+    s.arc(0,0,20,0, 2*Math.PI)
+    s.arc(45,0,20,0, 2*Math.PI)
+    s.arc(90,0,20,0, 2*Math.PI)
+    s.arc(135,0,20,0, 2*Math.PI)
+    s.fillStyle = "#fff"
+    s.fill()
+    s.fillStyle = `hsl(${110-sp*100},100%,40%)`
+    s.fillText(sp,screenWidth - 100, screenHeight - 100)
+    s.fillText(c.toFixed(2), screenWidth / 2 - 100, screenHeight - 100)
+    c--
+   requestAnimationFrame(l)
+};
+l()
+//onclick=e=>{ /* … */ }
+// up 38, 90
+// left 37,81
+// right 39, 68
+// down 40,83
+// a65 z90 e69 r82  q81 s83 d68 f70 esc 27 space32     
+window.onkeydown=e=>{ 
+    console.log(e.keyCode)
+}
+
+window.onkeyup=e=>{ 
+    console.log(e.keyCode)
+    if(e.keyCode===27) {
+        mode='pause'
+    }
+    if(e.keyCode==32) {
+        g = false
+    }
+}
+
+window.onmousedown=e=>{
+    if(mode === 'menu' || mode === 'pause') {
+        mode = 'play'   
+        l()
+    }
+}
+</script>
